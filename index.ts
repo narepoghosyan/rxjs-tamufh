@@ -38,7 +38,11 @@ clickEvent$
 
 // 3. From an input, make an http call with a delay of 500ms after typing finished and console.log the result.
 
-const searchEvent$ = fromEvent(document.getElementById('searchinput'), 'input');
+const inputElement = document.createElement('input');
+inputElement.setAttribute('placeholder', 'Search for an artist or a song');
+document.body.appendChild(inputElement);
+
+const searchEvent$ = fromEvent(inputElement, 'input');
 
 searchEvent$
   .pipe(

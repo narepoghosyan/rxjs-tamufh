@@ -1,61 +1,63 @@
-import {
-  of,
-  map,
-  fromEvent,
-  filter,
-  toArray,
-  switchMap,
-  from,
-  debounceTime,
-  pluck,
-  mergeMap,
-  take,
-} from 'rxjs';
+import { combineLatest, filter, forkJoin, fromEvent, map, of } from 'rxjs';
 import { fromFetch } from 'rxjs/fetch';
+import { debounceTime, switchMap } from 'rxjs/operators';
 
-// 1. From an Observable of strings, console.log an array of lowercase characters from each string.
+// 2. Create two number inputs and a dropdown which allows to select an arithmetic operation (+, -, *, /, %). After selecting any, display the result of the operation in the DOM​.
 
-const strings$ = of('Word', 'Another');
-
-strings$
+fromEvent(document.getElementById('select'), 'change')
   .pipe(
-    switchMap((item) =>
-      from(item).pipe(
-        filter((item) => item === item.toLowerCase()),
-        toArray()
-      )
-    )
-  )
-  .subscribe(console.log);
-
-// 2. From an Observable of click events, console.log an object with x/y coordinates of the click on the screen.
-
-const clickEvent$ = fromEvent(document, 'click');
-
-clickEvent$
-  .pipe(map((e: MouseEvent) => ({ x: e.clientX, y: e.clientY })))
-  .subscribe(console.log);
-
-// 3. From an input, make an http call with a delay of 500ms after typing finished and console.log the result.
-
-const inputElement = document.createElement('input');
-inputElement.setAttribute('placeholder', 'Search for an artist or a song');
-document.body.appendChild(inputElement);
-
-const searchEvent$ = fromEvent(inputElement, 'input');
-
-searchEvent$
-  .pipe(
-    debounceTime(500),
-    filter((event: MouseEvent) => event.target.value),
     switchMap((event) => {
-      const value = event.target.value;
-      const url = `https://api.mixcloud.com/search/?q=${value}&type=tag`;
-      return fromFetch(url, { selector: (response) => response.json() }).pipe(
-        mergeMap((data) =>
-          from(data.data).pipe(take(10), pluck('name'), toArray())
-        )
+      const firstInput = document.getElementById('first') as HTMLInputElement;
+      const secondInput = document.getElementById('second') as HTMLInputElement;
+      const operator = event.target.value;
+      const operators = {
+        '+': (a: number, b: number) => a + b,
+        '-': (a: number, b: number) => a - b,
+        '*': (a: number, b: number) => a * b,
+        '/': (a: number, b: number) => a / b,
+        '%': (a: number, b: number) => a % b,
+      };
+      return forkJoin([of(firstInput.value), of(secondInput.value)]).pipe(
+        filter((data) => data[0] !== '' && data[1] !== ''),
+        map((data) => operators[operator](+data[0], +data[1]))
       );
     })
   )
   .subscribe(console.log);
+
+// 3. Create three inputs in which the user can type a name of a country, call the “restcountries” api and display the country that has the largest population​
+
+combineLatest(
+  Array.from(document.getElementsByClassName('country')).map(
+    (data: HTMLInputElement) =>
+      fromEvent(data, 'input').pipe(
+        debounceTime(500),
+        filter((data) => data.target.value),
+        switchMap((data) =>
+          fromFetch(
+            `https://restcountries.com/v3.1/name/${data.target.value}?fullText=true`
+          ).pipe(
+            switchMap((response) => {
+              return response.json();
+            }),
+            filter((item) => item.length),
+            map((item) => item[0])
+          )
+        )
+      )
+  )
+).subscribe((data) => {
+  const countryWithLargestPopulation = data.find(
+    (item) =>
+      item.population ===
+      Math.max.apply(
+        null,
+        data.map((c) => c.population)
+      )
+  );
+  console.log(
+    countryWithLargestPopulation.altSpellings[1] +
+      ' : ' +
+      countryWithLargestPopulation.population
+  );
+});

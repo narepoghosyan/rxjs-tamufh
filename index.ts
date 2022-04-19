@@ -1,5 +1,6 @@
 import {
   combineLatest,
+  concat,
   filter,
   forkJoin,
   fromEvent,
@@ -14,6 +15,7 @@ import {
   defaultIfEmpty,
   switchMap,
   takeUntil,
+toArray,
 } from 'rxjs/operators';
 
 // 1. Create a “you have been inactive popup” which will alert a window if user has not done anything with the mouse (click, double click, scroll, right click, mouse move) for 10 seconds​.
@@ -47,7 +49,8 @@ fromEvent(document.getElementById('select'), 'change')
         '/': (a: number, b: number) => a / b,
         '%': (a: number, b: number) => a % b,
       };
-      return forkJoin([of(firstInput.value), of(secondInput.value)]).pipe(
+      return concat(of(firstInput.value), of(secondInput.value)).pipe(
+        toArray(),
         filter((data) => data[0] !== '' && data[1] !== ''),
         map((data) => operators[operator](+data[0], +data[1]))
       );

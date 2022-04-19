@@ -6,10 +6,15 @@ import {
   map,
   merge,
   of,
-timer,
+  timer,
 } from 'rxjs';
 import { fromFetch } from 'rxjs/fetch';
-import { debounceTime, defaultIfEmpty, endWith, startWith, switchMap, takeUntil, tap } from 'rxjs/operators';
+import {
+  debounceTime,
+  defaultIfEmpty,
+  switchMap,
+  takeUntil,
+} from 'rxjs/operators';
 
 // 1. Create a “you have been inactive popup” which will alert a window if user has not done anything with the mouse (click, double click, scroll, right click, mouse move) for 10 seconds​.
 
@@ -18,15 +23,14 @@ merge(
   fromEvent(document, 'dblclick'),
   fromEvent(document, 'contextmenu'),
   fromEvent(document, 'scroll'),
-  fromEvent(document, 'mousemove'),
-).pipe(
-  takeUntil(timer(10000)),
-  defaultIfEmpty('inactive'),
-).subscribe(val => {
-  if(val === 'inactive') {
-    alert('you have been inactive');
-  }
-});
+  fromEvent(document, 'mousemove')
+)
+  .pipe(takeUntil(timer(10000)), defaultIfEmpty('inactive'))
+  .subscribe((val) => {
+    if (val === 'inactive') {
+      alert('you have been inactive');
+    }
+  });
 
 // 2. Create two number inputs and a dropdown which allows to select an arithmetic operation (+, -, *, /, %). After selecting any, display the result of the operation in the DOM​.
 

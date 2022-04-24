@@ -1,36 +1,40 @@
-import { from, fromEvent, interval, merge, of } from 'rxjs';
-import {
-  auditTime,
-  distinct,
-  mergeMap,
-  skipUntil,
-  takeUntil,
-  toArray,
-} from 'rxjs/operators';
+import { of, partition, merge, concat, map, from, fromEvent } from 'rxjs';
+import { distinctUntilChanged, withLatestFrom } from 'rxjs/operators';
 
-// 1. Write a function that takes an array of numbers and returns an Observable of the same array, but without duplicate values​.
+// 1. Create an input with default value, and enable the button if the text is changed by the user; if the text is changed back to the default value, disable the button again​.
 
-const removeDuplicates = (arr: number[]) => {
-  return from(arr).pipe(distinct(), toArray()).subscribe(console.log);
-};
+const defaultInput$ = fromEvent(
+  document.getElementById('inputWithDefaultValue'),
+  'input'
+);
 
-removeDuplicates([1, 2, 3, 3, 4, 3, 7]);
+defaultInput$.pipe().subscribe((data) => {
+  console.log(data);
+});
 
-// 2.Create an Observable that shows the current time in the console, but only after a certain button has been clicked, and stops when another one is clicked​.
+// 2. Create a stream of numbers and console.log “odd” for odd numbers and “even” for even numbers​.
 
-interval(1000)
+// const numbers = [1, 2, 4, 5, 7, 8];
+
+// const numbers$ = from(numbers).pipe(delay(1000));
+
+// const [evens$, odds$] = partition(numbers$, (val) => val % 2 === 0);
+
+// merge(evens$.pipe(map((i) => 'even')), odds$.pipe(map((i) => 'odd'))).subscribe(
+//   console.log
+// );
+
+// 3. When the user clicks a button, console.log the value from an input​.
+
+const buttonEvent$ = fromEvent(
+  document.getElementById('showInputValue'),
+  'click'
+);
+const inputEvent$ = fromEvent(document.getElementById('inputValue'), 'input');
+
+buttonEvent$
   .pipe(
-    skipUntil(fromEvent(document.getElementById('start'), 'click')),
-    takeUntil(fromEvent(document.getElementById('stop'), 'click')),
-    mergeMap(() => {
-      const date = new Date();
-      return of(`${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`);
-    })
+    withLatestFrom(inputEvent$),
+    map(([click, input]) => (input.target as HTMLInputElement).value)
   )
-  .subscribe(console.log);
-
-// 3. Create a mix of different Observables, clicks, interval and so on, but only log their result every 3 seconds​.
-
-merge(fromEvent(document, 'dblclick'), interval(1500))
-  .pipe(auditTime(3000))
   .subscribe(console.log);

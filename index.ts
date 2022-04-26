@@ -1,28 +1,32 @@
-import { of, partition, merge, concat, map, from, fromEvent } from 'rxjs';
-import { distinctUntilChanged, withLatestFrom } from 'rxjs/operators';
+import { of, map, fromEvent } from 'rxjs';
+import { startWith, tap, withLatestFrom } from 'rxjs/operators';
 
 // 1. Create an input with default value, and enable the button if the text is changed by the user; if the text is changed back to the default value, disable the button again​.
 
-const defaultInput$ = fromEvent(
-  document.getElementById('inputWithDefaultValue'),
-  'input'
-);
+const input = document.getElementById(
+  'inputWithDefaultValue'
+) as HTMLInputElement;
+const button = document.getElementById('submit') as HTMLButtonElement;
 
-defaultInput$.pipe().subscribe((data) => {
-  console.log(data);
-});
+fromEvent(input, 'input')
+  .pipe(
+    map((val) => (val.target as HTMLInputElement).value),
+    startWith(input.value),
+    withLatestFrom(of(input.value)),
+    tap((val) => {
+      const disabled = val[0] === val[1];
+      button.disabled = disabled;
+    })
+  )
+  .subscribe();
 
 // 2. Create a stream of numbers and console.log “odd” for odd numbers and “even” for even numbers​.
 
-// const numbers = [1, 2, 4, 5, 7, 8];
+const numbers$ = of(1, 2, 4, 5, 7, 8);
 
-// const numbers$ = from(numbers).pipe(delay(1000));
-
-// const [evens$, odds$] = partition(numbers$, (val) => val % 2 === 0);
-
-// merge(evens$.pipe(map((i) => 'even')), odds$.pipe(map((i) => 'odd'))).subscribe(
-//   console.log
-// );
+numbers$
+  .pipe(map((val) => (val % 2 === 0 ? 'even' : 'odd')))
+  .subscribe(console.log);
 
 // 3. When the user clicks a button, console.log the value from an input​.
 

@@ -50,6 +50,6 @@ const event$ = fromEvent(document.querySelector('#buffer'), 'click');
 numbers$
   .pipe(
     buffer(event$),
-    scan((total, n) => [...total, ...n]) // 
+    scan((total, n) => [...total, ...n])
   )
   .subscribe(console.log);

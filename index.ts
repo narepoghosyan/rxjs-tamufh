@@ -9,7 +9,7 @@ import {
   retry,
 } from 'rxjs';
 import { fromFetch } from 'rxjs/fetch';
-import { buffer, max, mergeMap } from 'rxjs/operators';
+import { buffer, max, mergeMap, scan } from 'rxjs/operators';
 
 // 1. Write an async function that takes an array of numbers and returns the largest element​.
 
@@ -47,4 +47,9 @@ getCountries('https://restcountries.com/v3.1/name/armenia?fullText=true', 3);
 const numbers$ = interval(1000);
 const event$ = fromEvent(document.querySelector('#buffer'), 'click');
 
-numbers$.pipe(buffer(event$)).subscribe(console.log);
+numbers$
+  .pipe(
+    buffer(event$),
+    scan((total, n) => [...total, ...n]) // 
+  )
+  .subscribe(console.log);
